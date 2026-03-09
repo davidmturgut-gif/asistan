@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kişisel AI Asistan</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+:root{
+  --bg:#0f0f0f;--surface:#161616;--surface2:#1e1e1e;--border:#2a2a2a;
+  --accent:#c9a96e;--accent2:#e8c99a;--text:#e8e8e8;--muted:#888;
+  --ubg:#1a2a1a;--abg:#1a1a2a;--green:#60a060;--red:#c08080;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-ring{width:38px;height:38px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+.logo-ring::before{content:'';position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#c9a96e22,transparent);animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.1);}}
+.logo-dot{width:9px;height:9px;background:var(--accent);border-radius:50%;}
+.logo-text h1{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--accent2);}
+.logo-text p{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.sdot.on{background:var(--green);box-shadow:0 0 5px var(--green);}
+.hbtn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.hbtn:hover{border-color:var(--accent);color:var(--accent);}
+.caps{display:flex;gap:6px;padding:8px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.cap{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--muted);}
+.cap.on{border-color:var(--accent);color:var(--accent);}
+.cap .d{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px);}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;width:420px;max-width:92vw;}
+.modal h2{font-family:'Playfair Display',serif;font-size:21px;color:var(--accent2);margin-bottom:6px;}
+.modal .sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:7px;}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:16px;transition:border-color .2s;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:#444;}
+.notice{background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.18);border-radius:8px;padding:12px 14px;font-size:12px;color:#a88855;margin-bottom:20px;line-height:1.65;}
+.pbtn{width:100%;background:var(--accent);color:#0f0f0f;border:none;border-radius:8px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
+.pbtn:hover{background:var(--accent2);}
+.help-link{display:block;text-align:center;font-size:12px;color:var(--muted);margin-top:14px;text-decoration:none;}
+.help-link:hover{color:var(--accent);}
+.chat{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth;}
+.chat::-webkit-scrollbar{width:3px;}
+.chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.welcome{text-align:center;padding:36px 16px;max-width:480px;margin:0 auto;}
+.wicon{width:60px;height:60px;border:1px solid var(--accent);border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#c9a96e0d,transparent);}
+.welcome h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--accent2);margin-bottom:8px;}
+.welcome p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:24px;}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.qa-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;cursor:pointer;text-align:left;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .2s;}
+.qa-btn:hover{border-color:var(--accent);background:rgba(201,169,110,.04);}
+.qi{font-size:17px;margin-bottom:5px;display:block;}
+.qt{font-size:12px;font-weight:500;display:block;margin-bottom:2px;}
+.qs-sub{font-size:11px;color:var(--muted);}
+.msg{display:flex;gap:10px;animation:fi .3s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.msg.u{flex-direction:row-reverse;margin-left:auto;max-width:80%;}
+.msg.a{max-width:88%;}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;}
+.msg.u .av{background:var(--accent);color:#0f0f0f;font-weight:700;}
+.msg.a .av{background:var(--surface2);border:1px solid var(--border);}
+.mc{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px 15px;font-size:14px;line-height:1.72;}
+.msg.u .mc{background:var(--ubg);border-color:#2a3a2a;}
+.msg.a .mc{background:var(--abg);border-color:#2a2a3a;}
+.mc p{margin-bottom:7px;}
+.mc p:last-child{margin-bottom:0;}
+.mc strong{color:var(--accent2);}
+.mc code{background:#222;padding:1px 5px;border-radius:4px;font-size:12.5px;}
+.mm{font-size:10px;color:var(--muted);margin-top:5px;}
+.msg.u .mm{text-align:right;}
+.stag{display:inline-flex;align-items:center;gap:4px;background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.2);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--accent);margin-top:8px;}
+.typing{display:flex;gap:4px;align-items:center;padding:3px 0;}
+.typing span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:b 1.2s ease-in-out infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes b{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-6px);opacity:1;}}
+.tool{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;align-self:flex-start;}
+.sp{width:11px;height:11px;border:1.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.input-area{padding:14px 24px 20px;flex-shrink:0;background:var(--bg);border-top:1px solid var(--border);}
+.iw{display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:9px 12px;transition:border-color .2s;}
+.iw:focus-within{border-color:var(--accent);}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;resize:none;max-height:120px;min-height:22px;}
+#inp::placeholder{color:#3a3a3a;}
+.ia{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.tbtn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:5px 8px;font-size:13px;transition:all .2s;line-height:1;}
+.tbtn.on,.tbtn:hover{border-color:var(--accent);color:var(--accent);background:rgba(201,169,110,.07);}
+.sbtn{background:var(--accent);border:none;border-radius:7px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#0f0f0f;transition:all .2s;}
+.sbtn:hover{background:var(--accent2);transform:scale(1.05);}
+.sbtn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.hint{font-size:10px;color:#2e2e2e;text-align:center;margin-top:7px;}
+.errmsg{background:rgba(192,96,96,.1);border:1px solid rgba(192,96,96,.25);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--red);align-self:flex-start;max-width:88%;}
+@media(max-width:600px){
+  header{padding:12px 14px;}
+  .caps{padding:7px 14px;overflow-x:auto;flex-wrap:nowrap;}
+  .chat{padding:14px;}
+  .input-area{padding:10px 14px 16px;}
+  .qa{grid-template-columns:1fr;}
+  .logo-text p{display:none;}
+  .msg.u,.msg.a{max-width:95%;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-ring"><div class="logo-dot"></div></div>
+    <div class="logo-text">
+      <h1>Kişisel AI Asistan</h1>
+      <p>Profesyonel · Türkçe</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status">
+      <div class="sdot" id="sdot"></div>
+      <span id="slbl">Bekleniyor</span>
+    </div>
+    <button class="hbtn" onclick="clearChat()">🗑 Temizle</button>
+    <button class="hbtn" onclick="openSettings()">⚙ Ayarlar</button>
+  </div>
+</header>
+
+<div class="caps">
+  <div class="cap on"><div class="d"></div>Konuşma</div>
+  <div class="cap on" id="capSearch"><div class="d"></div>Web Arama</div>
+  <div class="cap on"><div class="d"></div>Oturum Hafızası</div>
+</div>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h2>Asistanı Başlat</h2>
+    <p class="sub">Anthropic API anahtarınızı girin. Anahtar yalnızca bu oturumda bellekte tutulur — sayfa kapandığında otomatik silinir.</p>
+    <div class="lbl">Anthropic API Anahtarı</div>
+    <input type="password" class="inp" id="apiKey" placeholder="sk-ant-api03-..." />
+    <div class="notice">
+      🔒 <strong>Gizlilik:</strong> Yazdıklarınız yalnızca Anthropic API'ye iletilir. Üçüncü tarafla paylaşılmaz. Konuşma geçmişi tarayıcı hafızasında tutulur — sayfa kapanınca silinir.
+    </div>
+    <button class="pbtn" onclick="start()">Asistanı Başlat →</button>
+    <a class="help-link" href="https://console.anthropic.com" target="_blank">API anahtarını buradan ücretsiz alabilirsiniz →</a>
+  </div>
+</div>
+
+<div class="chat" id="chat">
+  <div class="welcome" id="ws">
+    <div class="wicon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h2>Nasıl Yardımcı Olabilirim?</h2>
+    <p>Profesyonel AI asistanınız hazır. Sorularınızı sorun, web'de arama yaptırın. Bu oturum boyunca konuşmamızı hatırlıyorum.</p>
+    <div class="qa">
+      <button class="qa-btn" onclick="quickSend('Bugünün önemli Türkiye ve dünya haber başlıklarını özetle')">
+        <span class="qi">📰</span>
+        <span class="qt">Güncel Haberler</span>
+        <span class="qs-sub">Web'de ara ve özetle</span>
+      </button>
+      <button class="qa-btn" onclick="quickSend('Yapay zeka alanında bu hafta öne çıkan gelişmeler neler?')">
+        <span class="qi">🤖</span>
+        <span class="qt">AI Gelişmeleri</span>
+        <span class="qs-sub">Güncel araştır</span>
+      </button>
+      <button class="qa-btn" onclick="quickSend('Bugün nasıl daha verimli çalışabilirim? Somut ve pratik öneriler ver.')">
+        <span class="qi">⚡</span>
+        <span class="qt">Verimlilik İpuçları</span>
+        <span class="qs-sub">Kişisel tavsiye</span>
+      </button>
+      <button class="qa-btn" onclick="quickSend('Türkiye ekonomisi ve borsa güncel durumu nedir?')">
+        <span class="qi">📊</span>
+        <span class="qt">Ekonomi Özeti</span>
+        <span class="qs-sub">Güncel verilerle</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="iw">
+    <textarea id="inp" placeholder="Sorunuzu yazın veya görev verin..." rows="1"
+      onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+    <div class="ia">
+      <button class="tbtn on" id="btnSearch" onclick="toggleSearch()" title="Web aramayı aç/kapat">🔍</button>
+      <button class="sbtn" id="btnSend" onclick="send()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="hint">Enter → Gönder &nbsp;·&nbsp; Shift+Enter → Yeni satır &nbsp;·&nbsp; 🔍 Web aramayı açar/kapar</div>
+</div>
+
+<script>
+let key='', useSearch=true, busy=false, history=[];
+
+const SYS=`Sen profesyonel ve resmi bir kişisel AI asistansın. Her zaman Türkçe yanıt veriyorsun.
+Kurallar:
+- Yanıtların her zaman açık, özlü ve profesyoneldir
+- Gerektiğinde adım adım açıklama yaparsın
+- Bilmediğin veya emin olmadığın konularda dürüstçe belirtirsin
+- Web arama sonuçlarını analiz edip Türkçe özetlersin
+- Konuşma geçmişini hatırlayarak bağlamı korursun
+Bugün: ${new Date().toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+
+window.onload=()=>{ document.getElementById('modal').style.display='flex'; };
+
+function start(){
+  const k=document.getElementById('apiKey').value.trim();
+  if(!k||!k.startsWith('sk-')){
+    alert('Geçerli bir Anthropic API anahtarı girin.\n\n"sk-ant-..." formatında olmalıdır.\n\nconsole.anthropic.com adresinden ücretsiz alabilirsiniz.');
+    return;
+  }
+  key=k;
+  document.getElementById('modal').style.display='none';
+  document.getElementById('sdot').className='sdot on';
+  document.getElementById('slbl').textContent='Hazır';
+  document.getElementById('inp').focus();
+}
+
+function openSettings(){
+  document.getElementById('apiKey').value=key;
+  document.getElementById('modal').style.display='flex';
+}
+
+function toggleSearch(){
+  useSearch=!useSearch;
+  document.getElementById('btnSearch').classList.toggle('on',useSearch);
+  document.getElementById('capSearch').classList.toggle('on',useSearch);
+}
+
+function clearChat(){
+  if(!history.length)return;
+  if(!confirm('Tüm konuşma geçmişi silinecek. Emin misiniz?'))return;
+  history=[];
+  const c=document.getElementById('chat');
+  c.innerHTML='<div class="welcome" id="ws"><div class="wicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><h2>Konuşma Temizlendi</h2><p>Yeni bir konuşma başlatabilirsiniz.</p></div>';
+}
+
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+function quickSend(t){document.getElementById('inp').value=t;send();}
+
+function fmt(t){
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code>$1</code>')
+    .replace(/^#{1,3} (.+)$/gm,'<strong style="font-size:13px;color:var(--accent2);display:block;margin:10px 0 4px;">$1</strong>')
+    .replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')
+    .replace(/^/,'<p>').replace(/$/,'</p>');
+}
+
+function addMsg(role,text,extra={}){
+  const ws=document.getElementById('ws');
+  if(ws)ws.remove();
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='msg '+(role==='user'?'u':'a');
+  const av=document.createElement('div');
+  av.className='av';
+  av.textContent=role==='user'?'S':'✦';
+  const mc=document.createElement('div');
+  mc.className='mc';
+  mc.innerHTML=fmt(text);
+  if(extra.search){
+    const t=document.createElement('div');
+    t.className='stag';
+    t.textContent='🔍 Web araması kullanıldı';
+    mc.appendChild(t);
+  }
+  const mm=document.createElement('div');
+  mm.className='mm';
+  mm.textContent=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  mc.appendChild(mm);
+  d.appendChild(av);d.appendChild(mc);
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+}
+
+function addTyping(){
+  const ws=document.getElementById('ws');if(ws)ws.remove();
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='msg a';d.id='typing';
+  d.innerHTML='<div class="av">✦</div><div class="mc"><div class="typing"><span></span><span></span><span></span></div></div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function rmTyping(){const e=document.getElementById('typing');if(e)e.remove();}
+
+function addTool(t){
+  const ws=document.getElementById('ws');if(ws)ws.remove();
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='tool';d.id='tool';
+  d.innerHTML='<div class="sp"></div>'+t;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function rmTool(){const e=document.getElementById('tool');if(e)e.remove();}
+
+function addErr(msg){
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='errmsg';
+  d.innerHTML='<strong>Hata:</strong> '+msg;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+
+async function send(){
+  if(busy)return;
+  if(!key){alert('Önce API anahtarınızı girin (⚙ Ayarlar).');openSettings();return;}
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();
+  if(!txt)return;
+  inp.value='';inp.style.height='auto';
+  busy=true;
+  document.getElementById('btnSend').disabled=true;
+
+  addMsg('user',txt);
+  history.push({role:'user',content:txt});
+
+  const tools=useSearch?[{type:'web_search_20250305',name:'web_search'}]:[];
+
+  if(useSearch)addTool("Web'de arama yapılıyor...");
+  else addTyping();
+
+  try{
+    const body={
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      system:SYS,
+      messages:history
+    };
+    if(tools.length)body.tools=tools;
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+
+    rmTool();rmTyping();
+
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      if(res.status===401)throw new Error('API anahtarı geçersiz. ⚙ Ayarlar\'dan kontrol edin.');
+      if(res.status===429)throw new Error('İstek limiti aşıldı. Lütfen biraz bekleyin.');
+      throw new Error(e?.error?.message||'Sunucu hatası ('+res.status+')');
+    }
+
+    const data=await res.json();
+    let reply='',usedSearch=false;
+    for(const b of data.content){
+      if(b.type==='text')reply+=b.text;
+      if(b.type==='tool_use'&&b.name==='web_search')usedSearch=true;
+    }
+    if(!reply)reply='Yanıt alınamadı. Lütfen tekrar deneyin.';
+
+    history.push({role:'assistant',content:reply});
+    addMsg('ai',reply,{search:usedSearch});
+
+  }catch(err){
+    rmTool();rmTyping();
+    addErr(err.message);
+  }
+
+  busy=false;
+  document.getElementById('btnSend').disabled=false;
+  inp.focus();
+}
+</script>
+</body>
+</html>
